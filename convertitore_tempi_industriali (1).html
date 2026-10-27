@@ -1,0 +1,827 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Convertitore &amp; Calcolatore Tempi Industriali (Cmin)</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Font Awesome per le icone -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts Inter -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                    },
+                    colors: {
+                        indus: {
+                            50: '#f0f4f8',
+                            100: '#d9e2ec',
+                            200: '#bcccdc',
+                            300: '#9fb3c8',
+                            400: '#829ab1',
+                            500: '#627d98',
+                            600: '#486581',
+                            700: '#334e68',
+                            800: '#243b53',
+                            900: '#102a43',
+                            950: '#0b1d30',
+                        },
+                        accent: {
+                            50: '#f0f9ff',
+                            100: '#e0f2fe',
+                            200: '#bae6fd',
+                            300: '#7dd3fc',
+                            400: '#38bdf8',
+                            500: '#0284c7',
+                            600: '#0369a1',
+                            700: '#075985',
+                            800: '#0c4a6e',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        /* Personalizzazione Stampa */
+        @media print {
+            .no-print {
+                display: none !important;
+            }
+            .print-only {
+                display: block !important;
+            }
+            body {
+                background: white;
+                color: black;
+            }
+            .card-shadow {
+                box-shadow: none !important;
+                border: 1px solid #ccc !important;
+            }
+        }
+        /* Custom scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #f1f5f9;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8;
+        }
+    </style>
+</head>
+<body class="bg-slate-100 text-slate-800 font-sans min-h-screen flex flex-col justify-between">
+
+    <!-- Notifica Toast (Feedback Visivo) -->
+    <div id="toast" role="status" aria-live="polite" class="fixed bottom-5 right-5 bg-slate-900 text-white px-5 py-3 rounded-xl shadow-2xl flex items-center space-x-3 transform translate-y-20 opacity-0 transition-all duration-300 z-50 pointer-events-none">
+        <i class="fa-solid fa-circle-check text-emerald-400 text-xl" id="toast-icon"></i>
+        <span id="toast-message" class="text-sm font-medium">Operazione completata</span>
+    </div>
+
+    <!-- Header Principale -->
+    <header class="bg-indus-900 text-white shadow-md no-print border-b border-indus-700">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex flex-wrap justify-between items-center gap-4">
+            <div class="flex items-center space-x-3">
+                <div class="bg-accent-500 p-2.5 rounded-lg text-white shadow-sm">
+                    <i class="fa-solid fa-stopwatch text-2xl"></i>
+                </div>
+                <div>
+                    <h1 class="text-xl sm:text-2xl font-bold tracking-tight">TimeIndus Pro</h1>
+                    <p class="text-xs text-indus-300">Convertitore &amp; Analisi Tempi Industriali (Centesimi di Minuto)</p>
+                </div>
+            </div>
+            
+            <nav class="flex items-center space-x-2 sm:space-x-4 text-xs sm:text-sm font-medium">
+                <button onclick="scrollToSection('converter')" class="hover:bg-indus-800 px-3 py-2 rounded-lg transition-colors flex items-center gap-2">
+                    <i class="fa-solid fa-arrows-rotate text-accent-500"></i> Convertitore
+                </button>
+                <button onclick="scrollToSection('calculator')" class="hover:bg-indus-800 px-3 py-2 rounded-lg transition-colors flex items-center gap-2">
+                    <i class="fa-solid fa-calculator text-emerald-400"></i> Analisi Ciclo
+                </button>
+                <button onclick="scrollToSection('guide')" class="hover:bg-indus-800 px-3 py-2 rounded-lg transition-colors flex items-center gap-2">
+                    <i class="fa-solid fa-book-open text-amber-400"></i> Guida &amp; Tabelle
+                </button>
+            </nav>
+        </div>
+    </header>
+
+    <!-- Contenuto Principale -->
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 w-full flex-grow space-y-10">
+
+        <!-- Banner Spiegazione Rapida -->
+        <section class="bg-gradient-to-r from-indus-800 to-indus-900 rounded-2xl p-6 text-white shadow-lg relative overflow-hidden no-print">
+            <div class="absolute -right-10 -bottom-10 opacity-10 text-white pointer-events-none">
+                <i class="fa-solid fa-industry text-[200px]"></i>
+            </div>
+            <div class="relative z-10 max-w-3xl">
+                <div class="inline-flex items-center gap-2 bg-accent-500/30 text-accent-300 px-3 py-1 rounded-full text-xs font-semibold uppercase tracking-wider mb-3">
+                    <i class="fa-solid fa-circle-info"></i> Concetto Chiave
+                </div>
+                <h2 class="text-xl sm:text-2xl font-bold mb-2">Cos'è il Centesimo di Minuto (Cmin / HM)?</h2>
+                <p class="text-indus-200 text-sm leading-relaxed mb-4">
+                    In ambito industriale, per semplificare la somma dei tempi e i calcoli dei costi di produzione, 1 minuto non viene diviso in 60 secondi, ma in <strong>100 centesimi</strong>. 
+                    Quindi: <span class="bg-indus-700/80 px-2 py-0.5 rounded text-white font-mono">1 Minuto = 100 Centesimi (100 cmin)</span> e <span class="bg-indus-700/80 px-2 py-0.5 rounded text-white font-mono">1 Centesimo = 0,6 Secondi</span>.
+                </p>
+                <div class="flex flex-wrap gap-4 text-xs font-mono text-slate-200">
+                    <div class="bg-indus-950/60 backdrop-blur px-3 py-2 rounded-lg border border-indus-700">
+                        <span class="text-accent-400 font-bold">15 cmin</span> = 9 sec
+                    </div>
+                    <div class="bg-indus-950/60 backdrop-blur px-3 py-2 rounded-lg border border-indus-700">
+                        <span class="text-accent-400 font-bold">50 cmin</span> = 30 sec (0,5 min)
+                    </div>
+                    <div class="bg-indus-950/60 backdrop-blur px-3 py-2 rounded-lg border border-indus-700">
+                        <span class="text-accent-400 font-bold">75 cmin</span> = 45 sec
+                    </div>
+                    <div class="bg-indus-950/60 backdrop-blur px-3 py-2 rounded-lg border border-indus-700">
+                        <span class="text-accent-400 font-bold">100 cmin</span> = 60 sec (1 min)
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- SECCO 1: CONVERTITORE BIDIREZIONALE -->
+        <section id="converter" class="scroll-mt-6">
+            <div class="mb-4">
+                <h2 class="text-2xl font-bold text-indus-900 flex items-center gap-2">
+                    <i class="fa-solid fa-arrows-rotate text-accent-500"></i> Conversione Rapida in Tempo Reale
+                </h2>
+                <p class="text-slate-600 text-sm">Inserisci il valore in una qualsiasi casella, le altre si aggiorneranno automaticamente.</p>
+            </div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <!-- CARD A: DA CENTESIMI A TEMPO ORDINARIO -->
+                <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-6 flex flex-col justify-between hover:shadow-md transition-shadow">
+                    <div>
+                        <div class="flex items-center justify-between pb-4 mb-4 border-b border-slate-100">
+                            <span class="text-xs font-bold text-accent-600 bg-accent-50 px-3 py-1 rounded-full uppercase tracking-wider">Metodo A</span>
+                            <span class="text-xs text-slate-400 font-mono">1 min = 100 cmin</span>
+                        </div>
+                        <h3 class="text-lg font-bold text-slate-800 mb-2">Da Centesimi di Minuto (cmin) a Ore, Minuti, Secondi</h3>
+                        <p class="text-slate-500 text-xs mb-6">Inserisci i centesimi cronometrati per ottenere il tempo in Ore, Minuti, Secondi.</p>
+
+                        <div class="space-y-4">
+                            <div>
+                                <label for="cmin-input" class="block text-sm font-medium text-slate-700 mb-1">Centesimi di Minuto (cmin):</label>
+                                <div class="relative">
+                                    <input type="number" id="cmin-input" step="any" min="0" placeholder="Es. 150" 
+                                           class="w-full text-lg font-mono font-semibold px-4 py-3 bg-slate-50 border border-slate-300 rounded-xl focus:ring-2 focus:ring-accent-500 focus:border-accent-500 focus:bg-white outline-none transition-all">
+                                    <span class="absolute right-4 top-3.5 text-slate-400 text-sm font-semibold">cmin</span>
+                                </div>
+                            </div>
+
+                            <!-- Risultati Formattati -->
+                            <div class="bg-slate-50 rounded-xl p-4 border border-slate-200/80 space-y-3">
+                                <div class="flex justify-between items-center">
+                                    <span class="text-xs font-medium text-slate-500">Tempo (HH:MM:SS,d):</span>
+                                    <div class="flex items-center gap-2">
+                                        <span id="res-hhmmss" class="font-mono font-bold text-lg text-indus-900">00:01:30,0</span>
+                                        <button onclick="copyToClipboard('res-hhmmss')" class="text-slate-400 hover:text-accent-500 p-1" title="Copia" aria-label="Copia">
+                                            <i class="fa-regular fa-copy"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                                <div class="flex justify-between items-center pt-2 border-t border-slate-200/60">
+                                    <span class="text-xs font-medium text-slate-500">Minuti Decimali:</span>
+                                    <span id="res-mindec" class="font-mono font-semibold text-slate-700">1,50 min</span>
+                                </div>
+                                <div class="flex justify-between items-center pt-2 border-t border-slate-200/60">
+                                    <span class="text-xs font-medium text-slate-500">Secondi Totali:</span>
+                                    <span id="res-sec" class="font-mono font-semibold text-slate-700">90,0 sec</span>
+                                </div>
+                                <div class="flex justify-between items-center pt-2 border-t border-slate-200/60">
+                                    <span class="text-xs font-medium text-slate-500">Ore Decimali:</span>
+                                    <span id="res-hrdec" class="font-mono font-semibold text-slate-700">0,0250 h</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- CARD B: DA TEMPO ORDINARIO A CENTESIMI -->
+                <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-6 flex flex-col justify-between hover:shadow-md transition-shadow">
+                    <div>
+                        <div class="flex items-center justify-between pb-4 mb-4 border-b border-slate-100">
+                            <span class="text-xs font-bold text-emerald-600 bg-emerald-50 px-3 py-1 rounded-full uppercase tracking-wider">Metodo B</span>
+                            <span class="text-xs text-slate-400 font-mono">1 s ≈ 1,667 cmin</span>
+                        </div>
+                        <h3 class="text-lg font-bold text-slate-800 mb-2">Da Ore, Minuti, Secondi a Centesimi di Minuto</h3>
+                        <p class="text-slate-500 text-xs mb-6">Inserisci Ore, Minuti e Secondi per ricavare i centesimi industriali totali.</p>
+
+                        <div class="space-y-4">
+                            <!-- Input Separati -->
+                            <div class="grid grid-cols-3 gap-3">
+                                <div>
+                                    <label for="input-h" class="block text-xs font-medium text-slate-600 mb-1">Ore (hh)</label>
+                                    <input type="number" id="input-h" min="0" step="any" placeholder="0" 
+                                           class="w-full text-center font-mono font-semibold py-2.5 bg-slate-50 border border-slate-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 focus:bg-white outline-none">
+                                </div>
+                                <div>
+                                    <label for="input-m" class="block text-xs font-medium text-slate-600 mb-1">Minuti (mm)</label>
+                                    <input type="number" id="input-m" min="0" step="any" placeholder="0" 
+                                           class="w-full text-center font-mono font-semibold py-2.5 bg-slate-50 border border-slate-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 focus:bg-white outline-none">
+                                </div>
+                                <div>
+                                    <label for="input-s" class="block text-xs font-medium text-slate-600 mb-1">Secondi (ss)</label>
+                                    <input type="number" id="input-s" min="0" step="any" placeholder="0" 
+                                           class="w-full text-center font-mono font-semibold py-2.5 bg-slate-50 border border-slate-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 focus:bg-white outline-none">
+                                </div>
+                            </div>
+
+                            <!-- Risultati Formattati -->
+                            <div class="bg-slate-50 rounded-xl p-4 border border-slate-200/80 space-y-3">
+                                <div class="flex justify-between items-center">
+                                    <span class="text-xs font-medium text-slate-500">Totale Centesimi (cmin):</span>
+                                    <div class="flex items-center gap-2">
+                                        <span id="res-cmin-total" class="font-mono font-bold text-xl text-emerald-700">0,00 cmin</span>
+                                        <button onclick="copyToClipboard('res-cmin-total')" class="text-slate-400 hover:text-emerald-600 p-1" title="Copia" aria-label="Copia">
+                                            <i class="fa-regular fa-copy"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                                <div class="flex justify-between items-center pt-2 border-t border-slate-200/60">
+                                    <span class="text-xs font-medium text-slate-500">Equivalente in Minuti Decimali:</span>
+                                    <span id="res-mindec-b" class="font-mono font-semibold text-slate-700">0,00 min</span>
+                                </div>
+                                <div class="flex justify-between items-center pt-2 border-t border-slate-200/60">
+                                    <span class="text-xs font-medium text-slate-500">Totale Secondi:</span>
+                                    <span id="res-sec-b" class="font-mono font-semibold text-slate-700">0,0 sec</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- SECCO 2: CALCOLATRICE &amp; ANALISI CICLO DI LAVORO -->
+        <section id="calculator" class="bg-white rounded-2xl shadow-sm border border-slate-200 p-6 sm:p-8 scroll-mt-6">
+            <div class="flex flex-wrap justify-between items-start gap-4 mb-6 pb-4 border-b border-slate-100">
+                <div>
+                    <h2 class="text-2xl font-bold text-indus-900 flex items-center gap-2">
+                        <i class="fa-solid fa-calculator text-emerald-500"></i> Calcolatrice &amp; Analisi Ciclo di Lavoro
+                    </h2>
+                    <p class="text-slate-600 text-sm">Inserisci le singole fasi del ciclo industriale per calcolare il tempo totale e applicare le maggiorazioni.</p>
+                </div>
+                
+                <!-- Azioni di Esportazione -->
+                <div class="flex items-center gap-2 no-print">
+                    <button onclick="exportCSV()" class="bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold px-3 py-2 rounded-lg transition flex items-center gap-1.5">
+                        <i class="fa-solid fa-file-csv text-emerald-600"></i> Esporta CSV
+                    </button>
+                    <button onclick="window.print()" class="bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold px-3 py-2 rounded-lg transition flex items-center gap-1.5">
+                        <i class="fa-solid fa-print text-indus-600"></i> Stampa / PDF
+                    </button>
+                    <button onclick="clearAllPhases()" class="bg-rose-50 hover:bg-rose-100 text-rose-600 text-xs font-semibold px-3 py-2 rounded-lg transition flex items-center gap-1.5">
+                        <i class="fa-solid fa-trash-can"></i> Svuota
+                    </button>
+                </div>
+            </div>
+
+            <!-- Form di Inserimento Fase -->
+            <form id="add-phase-form" onsubmit="addPhase(event)" class="bg-slate-50 p-4 rounded-xl border border-slate-200 mb-6 grid grid-cols-1 sm:grid-cols-12 gap-3 items-end no-print">
+                <div class="sm:col-span-5">
+                    <label for="phase-name" class="block text-xs font-medium text-slate-600 mb-1">Nome o Descrizione Fase</label>
+                    <input type="text" id="phase-name" placeholder="Es. Montaggio componente A" required
+                           class="w-full px-3 py-2 bg-white border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-indus-500 outline-none">
+                </div>
+                <div class="sm:col-span-4">
+                    <label for="phase-time" class="block text-xs font-medium text-slate-600 mb-1">Tempo Misurato (cmin)</label>
+                    <input type="number" id="phase-time" step="any" min="0" placeholder="Es. 120" required
+                           class="w-full px-3 py-2 bg-white border border-slate-300 rounded-lg text-sm font-mono focus:ring-2 focus:ring-indus-500 outline-none">
+                </div>
+                <div class="sm:col-span-3">
+                    <button type="submit" class="w-full bg-indus-800 hover:bg-indus-900 text-white text-sm font-medium py-2 px-4 rounded-lg transition flex items-center justify-center gap-2 shadow-sm">
+                        <i class="fa-solid fa-plus"></i> Aggiungi Fase
+                    </button>
+                </div>
+            </form>
+
+            <!-- Tabella Fasi -->
+            <div class="overflow-x-auto rounded-xl border border-slate-200 mb-6">
+                <table class="w-full text-left border-collapse text-sm">
+                    <thead>
+                        <tr class="bg-slate-100 text-slate-700 font-semibold border-b border-slate-200 text-xs uppercase tracking-wider">
+                            <th class="py-3 px-4 w-12 text-center">#</th>
+                            <th class="py-3 px-4">Descrizione Fase</th>
+                            <th class="py-3 px-4 text-right">Tempo (cmin)</th>
+                            <th class="py-3 px-4 text-right">Tempo Equivalente (MM:SS)</th>
+                            <th class="py-3 px-4 text-center w-24 no-print">Azione</th>
+                        </tr>
+                    </thead>
+                    <tbody id="phases-tbody" class="divide-y divide-slate-100 bg-white">
+                        <!-- Righe generate dinamicamente -->
+                        <tr id="empty-row">
+                            <td colspan="5" class="py-8 text-center text-slate-400 italic">
+                                Nessuna fase inserita. Inserisci la prima fase del ciclo sopra.
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Parametri di Maggiorazione e Totali -->
+            <div class="grid grid-cols-1 md:grid-cols-12 gap-6 bg-slate-50 p-6 rounded-xl border border-slate-200">
+                
+                <!-- Input Maggiorazione -->
+                <div class="md:col-span-5 space-y-4 border-b md:border-b-0 md:border-r border-slate-200 pb-4 md:pb-0 md:pr-6">
+                    <h3 class="text-sm font-bold text-slate-800 flex items-center gap-2">
+                        <i class="fa-solid fa-sliders text-accent-500"></i> Maggiorazione &amp; Rendimento
+                    </h3>
+                    <p class="text-xs text-slate-500">
+                        Aggiungi una percentuale di tolleranza per riposo, fatica o esigenze personali (es. 5%, 10%, 12%). La percentuale è applicata al tempo netto.
+                    </p>
+                    <div>
+                        <label for="allowance-input" class="block text-xs font-medium text-slate-700 mb-1">Maggiorazione (%):</label>
+                        <div class="flex items-center gap-2">
+                            <input type="number" id="allowance-input" value="0" min="0" step="0.5" oninput="calculateCycleTotals()"
+                                   class="w-28 font-mono text-center px-3 py-2 bg-white border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-indus-500 outline-none">
+                            <span class="text-sm font-bold text-slate-600">%</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Scheda Risultati Totali -->
+                <div class="md:col-span-7 flex flex-col justify-between space-y-3">
+                    <div>
+                        <span class="text-xs font-bold text-slate-400 uppercase tracking-wider">Riepilogo Ciclo di Lavoro</span>
+                        
+                        <div class="grid grid-cols-2 gap-4 mt-2">
+                            <!-- Tempo Cronometrato (Netto) -->
+                            <div class="bg-white p-3 rounded-lg border border-slate-200">
+                                <span class="text-xs text-slate-500 block">Tempo Cronometrato (Netto)</span>
+                                <div class="text-lg font-bold text-slate-800 font-mono" id="total-net-cmin">0 cmin</div>
+                                <div class="text-xs text-slate-500 font-mono" id="total-net-time">00:00:00</div>
+                                <div class="text-xs text-slate-600 mt-2 pt-2 border-t border-slate-100"><span class="font-mono font-semibold" id="total-net-pph">—</span> pezzi/ora</div>
+                            </div>
+
+                            <!-- Tempo Standard (Lordo) -->
+                            <div class="bg-accent-50/60 border border-accent-200 p-3 rounded-lg">
+                                <span class="text-xs text-accent-800 font-semibold block">Tempo Standard (Con Maggiorazione)</span>
+                                <div class="text-xl font-extrabold text-accent-700 font-mono" id="total-gross-cmin">0 cmin</div>
+                                <div class="text-xs text-accent-600 font-mono font-semibold" id="total-gross-time">00:00:00</div>
+                                <div class="text-xs text-accent-800 mt-2 pt-2 border-t border-accent-200"><span class="font-mono font-bold" id="total-gross-pph">—</span> pezzi/ora</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="text-right text-xs text-slate-400 italic">
+                        Valori aggiornati automaticamente.
+                    </div>
+                </div>
+
+            </div>
+        </section>
+
+        <!-- SECCO 3: TABELLA GUIDA E RIFERIMENTO RAPIDO -->
+        <section id="guide" class="grid grid-cols-1 lg:grid-cols-3 gap-8 scroll-mt-6">
+            
+            <!-- Tabella di Conversione Rapida -->
+            <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-6 lg:col-span-1 flex flex-col">
+                <h3 class="text-lg font-bold text-indus-900 mb-2 flex items-center gap-2">
+                    <i class="fa-solid fa-table text-amber-500"></i> Tabella Prontuario
+                </h3>
+                <p class="text-xs text-slate-500 mb-4">Equivalenze rapide cmin / secondi più comuni in officina.</p>
+
+                <div class="overflow-y-auto max-h-80 rounded-xl border border-slate-100 flex-grow">
+                    <table class="w-full text-sm text-left">
+                        <thead class="bg-slate-50 text-slate-600 text-xs uppercase sticky top-0 border-b border-slate-200">
+                            <tr>
+                                <th class="py-2.5 px-3">Cmin</th>
+                                <th class="py-2.5 px-3">Secondi</th>
+                                <th class="py-2.5 px-3">Minuti</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-slate-100 font-mono text-xs">
+                            <tr><td class="py-2 px-3 font-semibold text-slate-700">1 cmin</td><td class="py-2 px-3">0,6 s</td><td class="py-2 px-3 text-slate-400">0,01 min</td></tr>
+                            <tr class="bg-slate-50/50"><td class="py-2 px-3 font-semibold text-slate-700">5 cmin</td><td class="py-2 px-3">3,0 s</td><td class="py-2 px-3 text-slate-400">0,05 min</td></tr>
+                            <tr><td class="py-2 px-3 font-semibold text-slate-700">10 cmin</td><td class="py-2 px-3">6,0 s</td><td class="py-2 px-3 text-slate-400">0,10 min</td></tr>
+                            <tr class="bg-slate-50/50"><td class="py-2 px-3 font-semibold text-slate-700">15 cmin</td><td class="py-2 px-3">9,0 s</td><td class="py-2 px-3 text-slate-400">0,15 min</td></tr>
+                            <tr><td class="py-2 px-3 font-semibold text-slate-700">20 cmin</td><td class="py-2 px-3">12,0 s</td><td class="py-2 px-3 text-slate-400">0,20 min</td></tr>
+                            <tr class="bg-slate-50/50"><td class="py-2 px-3 font-bold text-accent-600">25 cmin</td><td class="py-2 px-3 font-bold text-accent-600">15,0 s</td><td class="py-2 px-3 text-slate-400">0,25 min</td></tr>
+                            <tr><td class="py-2 px-3 font-semibold text-slate-700">30 cmin</td><td class="py-2 px-3">18,0 s</td><td class="py-2 px-3 text-slate-400">0,30 min</td></tr>
+                            <tr class="bg-slate-50/50"><td class="py-2 px-3 font-bold text-accent-600">50 cmin</td><td class="py-2 px-3 font-bold text-accent-600">30,0 s</td><td class="py-2 px-3 text-slate-400">0,50 min</td></tr>
+                            <tr><td class="py-2 px-3 font-bold text-accent-600">75 cmin</td><td class="py-2 px-3 font-bold text-accent-600">45,0 s</td><td class="py-2 px-3 text-slate-400">0,75 min</td></tr>
+                            <tr class="bg-emerald-50 text-emerald-900 font-bold"><td class="py-2 px-3">100 cmin</td><td class="py-2 px-3">60,0 s</td><td class="py-2 px-3">1,00 min</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Guida e Formule di Calcolo -->
+            <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-6 lg:col-span-2 space-y-4">
+                <h3 class="text-lg font-bold text-indus-900 flex items-center gap-2">
+                    <i class="fa-solid fa-graduation-cap text-indigo-500"></i> Come Funzionano le Formule?
+                </h3>
+                
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs">
+                    <div class="bg-slate-50 p-4 rounded-xl border border-slate-200">
+                        <span class="font-bold text-indus-800 text-sm block mb-1">1. Da Centesimi a Secondi</span>
+                        <p class="text-slate-600 mb-2">Poiché 1 minuto ha 100 centesimi e 60 secondi, ogni centesimo vale 0,6 secondi.</p>
+                        <div class="bg-white p-2 rounded border border-slate-200 font-mono text-slate-800">
+                            Secondi = Centesimi × 0,6
+                        </div>
+                        <span class="text-[11px] text-slate-400 mt-1 block">Esempio: 50 cmin × 0,6 = 30 secondi</span>
+                    </div>
+
+                    <div class="bg-slate-50 p-4 rounded-xl border border-slate-200">
+                        <span class="font-bold text-indus-800 text-sm block mb-1">2. Da Secondi a Centesimi</span>
+                        <p class="text-slate-600 mb-2">Per convertire i secondi cronometrati tradizionali in centesimi di minuto:</p>
+                        <div class="bg-white p-2 rounded border border-slate-200 font-mono text-slate-800">
+                            Centesimi = (Secondi / 60) × 100
+                        </div>
+                        <span class="text-[11px] text-slate-400 mt-1 block">Esempio: (15 sec / 60) × 100 = 25 cmin</span>
+                    </div>
+
+                    <div class="bg-slate-50 p-4 rounded-xl border border-slate-200">
+                        <span class="font-bold text-indus-800 text-sm block mb-1">3. Minuti Decimali</span>
+                        <p class="text-slate-600 mb-2">Il valore in centesimi corrisponde esattamente alla parte decimale dei minuti.</p>
+                        <div class="bg-white p-2 rounded border border-slate-200 font-mono text-slate-800">
+                            1 Minuto e 30 sec = 1,5 Minuti = 150 cmin
+                        </div>
+                    </div>
+
+                    <div class="bg-slate-50 p-4 rounded-xl border border-slate-200">
+                        <span class="font-bold text-indus-800 text-sm block mb-1">4. Tempo Standard con Maggiorazione</span>
+                        <p class="text-slate-600 mb-2">Calcolo del tempo concedibile comprensivo di coefficienti di riposo/fatica:</p>
+                        <div class="bg-white p-2 rounded border border-slate-200 font-mono text-slate-800">
+                            T. Standard = T. Netto × (1 + % / 100)
+                        </div>
+                    </div>
+
+                    <div class="bg-slate-50 p-4 rounded-xl border border-slate-200 sm:col-span-2">
+                        <span class="font-bold text-indus-800 text-sm block mb-1">5. Pezzi all'Ora</span>
+                        <p class="text-slate-600 mb-2">In un'ora ci sono 6000 centesimi di minuto (60 min × 100), quindi la produttività teorica si ricava dal tempo ciclo per pezzo:</p>
+                        <div class="bg-white p-2 rounded border border-slate-200 font-mono text-slate-800">
+                            Pezzi/ora = 6000 / Tempo ciclo (cmin)
+                        </div>
+                        <span class="text-[11px] text-slate-400 mt-1 block">Esempio: ciclo di 250 cmin → 6000 / 250 = 24 pezzi/ora. Il valore con maggiorazione è quello da usare per pianificare la produzione.</span>
+                    </div>
+                </div>
+
+                <div class="bg-amber-50 border border-amber-200 rounded-xl p-4 text-xs text-amber-900 flex items-start gap-3">
+                    <i class="fa-solid fa-lightbulb text-amber-500 text-base mt-0.5"></i>
+                    <div>
+                        <strong>Suggerimento Operativo per Tempi e Metodi:</strong>
+                        Utilizzando un cronometro centesimale durante le rilevazioni in linea di montaggio, eviti di dover fare conversioni sessagesimali (in base 60) quando fai le somme dei tempi di ciclo nei fogli di calcolo Excel.
+                    </div>
+                </div>
+            </div>
+
+        </section>
+
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-indus-950 text-indus-400 text-xs py-6 border-t border-indus-800 no-print">
+        <div class="max-w-7xl mx-auto px-4 text-center sm:flex sm:justify-between sm:items-center space-y-2 sm:space-y-0">
+            <div>
+                <span class="font-semibold text-slate-200">TimeIndus Pro</span> &copy; <span id="year"></span> - Strumento per Tempi &amp; Metodi e Ingegneria di Processo.
+            </div>
+            <div class="flex justify-center space-x-4 text-indus-300">
+                <span>1 min = 100 cmin</span>
+                <span>&bull;</span>
+                <span>1 cmin = 0,6 s</span>
+            </div>
+        </div>
+    </footer>
+
+    <!-- LOGICA JAVASCRIPT -->
+    <script>
+        // ---------- Stato globale ----------
+        let cyclePhases = [];
+        let nextPhaseId = 1;
+        let toastTimer = null;
+
+        // ---------- Utility ----------
+        const $ = (id) => document.getElementById(id);
+        const pad = (n) => String(n).padStart(2, '0');
+
+        // Formatta un numero con la virgola decimale italiana (senza separatore migliaia)
+        function fmt(n, decimals) {
+            return n.toLocaleString('it-IT', {
+                minimumFractionDigits: decimals,
+                maximumFractionDigits: decimals,
+                useGrouping: false
+            });
+        }
+
+        // 1 cmin = 0,6 s  ->  secondi = cmin * 6 / 10 (evita errori di virgola mobile di cmin * 0.6)
+        function cminToSec(cmin) {
+            return cmin * 6 / 10;
+        }
+
+        // Legge un input numerico; valori vuoti, non validi o negativi diventano 0
+        function readNonNegative(id) {
+            const v = parseFloat($(id).value);
+            return (isNaN(v) || v < 0) ? 0 : v;
+        }
+
+        // Secondi -> "HH:MM:SS" (o "HH:MM:SS,d" con decimals = 1).
+        // Si arrotonda UNA volta sul totale e poi si scompone: niente "60 secondi" o ".10".
+        function formatHMS(totalSec, decimals = 0) {
+            const factor = Math.pow(10, decimals);
+            const units = Math.round(totalSec * factor);
+            const h = Math.floor(units / (3600 * factor));
+            const m = Math.floor(units / (60 * factor)) % 60;
+            const s = Math.floor(units / factor) % 60;
+            let out = `${pad(h)}:${pad(m)}:${pad(s)}`;
+            if (decimals > 0) {
+                out += ',' + String(units % factor).padStart(decimals, '0');
+            }
+            return out;
+        }
+
+        // Secondi -> "MM:SS" (i minuti possono superare 59), arrotondato al secondo
+        function formatMMSS(totalSec) {
+            const units = Math.round(totalSec);
+            return `${pad(Math.floor(units / 60))}:${pad(units % 60)}`;
+        }
+
+        function formatCminToHHMMSS(cmin) {
+            return formatHMS(cminToSec(cmin), 0);
+        }
+
+        // ---------- Inizializzazione ----------
+        document.addEventListener('DOMContentLoaded', () => {
+            $('year').textContent = new Date().getFullYear();
+
+            $('cmin-input').addEventListener('input', convertFromCmin);
+            $('input-h').addEventListener('input', convertFromStandardTime);
+            $('input-m').addEventListener('input', convertFromStandardTime);
+            $('input-s').addEventListener('input', convertFromStandardTime);
+
+            loadSampleData();
+        });
+
+        function scrollToSection(id) {
+            const el = $(id);
+            if (el) el.scrollIntoView({ behavior: 'smooth' });
+        }
+
+        // ---------- SEZIONE 1: CONVERTITORE ---------- //
+
+        // Centesimi di minuto -> Ore / Minuti / Secondi
+        function convertFromCmin() {
+            const cminVal = parseFloat($('cmin-input').value);
+
+            if (isNaN(cminVal) || cminVal < 0) {
+                resetConverterA();
+                return;
+            }
+
+            const totalSeconds = cminToSec(cminVal);
+            const totalMinutes = cminVal / 100;
+            const totalHours = totalMinutes / 60;
+
+            $('res-hhmmss').textContent = formatHMS(totalSeconds, 1);
+            $('res-mindec').textContent = `${fmt(totalMinutes, 2)} min`;
+            $('res-sec').textContent = `${fmt(totalSeconds, 1)} sec`;
+            $('res-hrdec').textContent = `${fmt(totalHours, 4)} h`;
+        }
+
+        function resetConverterA() {
+            $('res-hhmmss').textContent = '00:00:00,0';
+            $('res-mindec').textContent = `${fmt(0, 2)} min`;
+            $('res-sec').textContent = `${fmt(0, 1)} sec`;
+            $('res-hrdec').textContent = `${fmt(0, 4)} h`;
+        }
+
+        // Ore / Minuti / Secondi -> Centesimi di minuto
+        function convertFromStandardTime() {
+            const h = readNonNegative('input-h');
+            const m = readNonNegative('input-m');
+            const s = readNonNegative('input-s');
+
+            const totalSeconds = (h * 3600) + (m * 60) + s;
+            const totalMinutes = totalSeconds / 60;
+            const totalCmin = totalMinutes * 100;
+
+            $('res-cmin-total').textContent = `${fmt(totalCmin, 2)} cmin`;
+            $('res-mindec-b').textContent = `${fmt(totalMinutes, 2)} min`;
+            $('res-sec-b').textContent = `${fmt(totalSeconds, 1)} sec`;
+        }
+
+        // ---------- SEZIONE 2: ANALISI CICLO DI LAVORO ---------- //
+
+        function addPhase(event) {
+            event.preventDefault();
+            const nameInput = $('phase-name');
+            const timeInput = $('phase-time');
+
+            const name = nameInput.value.trim();
+            const cmin = parseFloat(timeInput.value);
+
+            if (!name || isNaN(cmin) || cmin < 0) return;
+
+            cyclePhases.push({ id: nextPhaseId++, name: name, cmin: cmin });
+
+            nameInput.value = '';
+            timeInput.value = '';
+            nameInput.focus();
+
+            renderPhasesTable();
+            calculateCycleTotals();
+            showToast('Fase aggiunta con successo');
+        }
+
+        function removePhase(id) {
+            cyclePhases = cyclePhases.filter(p => p.id !== id);
+            renderPhasesTable();
+            calculateCycleTotals();
+            showToast('Fase rimossa');
+        }
+
+        function clearAllPhases() {
+            if (cyclePhases.length === 0) return;
+            if (confirm('Sei sicuro di voler cancellare tutte le fasi del ciclo?')) {
+                cyclePhases = [];
+                renderPhasesTable();
+                calculateCycleTotals();
+                showToast('Ciclo svuotato');
+            }
+        }
+
+        function renderPhasesTable() {
+            const tbody = $('phases-tbody');
+            tbody.innerHTML = '';
+
+            if (cyclePhases.length === 0) {
+                tbody.innerHTML = `
+                    <tr id="empty-row">
+                        <td colspan="5" class="py-8 text-center text-slate-400 italic">
+                            Nessuna fase inserita. Inserisci la prima fase del ciclo sopra.
+                        </td>
+                    </tr>
+                `;
+                return;
+            }
+
+            cyclePhases.forEach((phase, index) => {
+                const tr = document.createElement('tr');
+                tr.className = 'hover:bg-slate-50/80 transition-colors';
+
+                tr.innerHTML = `
+                    <td class="py-3 px-4 text-center font-mono text-xs text-slate-400">${index + 1}</td>
+                    <td class="py-3 px-4 font-medium text-slate-800">${escapeHtml(phase.name)}</td>
+                    <td class="py-3 px-4 text-right font-mono font-semibold text-slate-700">${fmt(phase.cmin, 2)} cmin</td>
+                    <td class="py-3 px-4 text-right font-mono text-slate-500">${formatMMSS(cminToSec(phase.cmin))}</td>
+                    <td class="py-3 px-4 text-center no-print">
+                        <button onclick="removePhase(${phase.id})" class="text-slate-400 hover:text-rose-500 p-1 transition" title="Elimina fase" aria-label="Elimina fase">
+                            <i class="fa-solid fa-trash-can"></i>
+                        </button>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        // Totali netto / standard (la maggiorazione si applica al tempo netto)
+        function getCycleTotals() {
+            const allowance = readNonNegative('allowance-input');
+            const net = cyclePhases.reduce((sum, p) => sum + p.cmin, 0);
+            const gross = net * (1 + allowance / 100);
+            return { allowance, net, gross };
+        }
+
+        // Pezzi/ora = 6000 / cmin (60 min x 100 cmin); null se il tempo è zero
+        function piecesPerHour(cmin) {
+            return cmin > 0 ? 6000 / cmin : null;
+        }
+
+        function formatPph(cmin) {
+            const pph = piecesPerHour(cmin);
+            return pph === null ? '—' : fmt(pph, 1);
+        }
+
+        function calculateCycleTotals() {
+            const { net, gross } = getCycleTotals();
+
+            $('total-net-pph').textContent = formatPph(net);
+            $('total-gross-pph').textContent = formatPph(gross);
+
+            $('total-net-cmin').textContent = `${fmt(net, 2)} cmin`;
+            $('total-net-time').textContent = formatCminToHHMMSS(net);
+
+            $('total-gross-cmin').textContent = `${fmt(gross, 2)} cmin`;
+            $('total-gross-time').textContent = formatCminToHHMMSS(gross);
+        }
+
+        // Esportazione CSV (separatore ";" e virgola decimale, per Excel in italiano)
+        function exportCSV() {
+            if (cyclePhases.length === 0) {
+                alert('Nessuna fase da esportare.');
+                return;
+            }
+
+            const num = (n) => fmt(n, 2);
+            // Racchiude tra virgolette e neutralizza le formule (=, +, -, @) in apertura cella
+            const text = (s) => {
+                const t = /^[=+\-@\t\r]/.test(s) ? "'" + s : s;
+                return '"' + t.replace(/"/g, '""') + '"';
+            };
+
+            const rows = [];
+            rows.push('N;Descrizione Fase;Tempo (cmin);Tempo (HH:MM:SS)');
+
+            cyclePhases.forEach((p, index) => {
+                rows.push(`${index + 1};${text(p.name)};${num(p.cmin)};${formatCminToHHMMSS(p.cmin)}`);
+            });
+
+            const { allowance, net, gross } = getCycleTotals();
+
+            rows.push('');
+            rows.push(`TOTALE NETTO;;${num(net)};${formatCminToHHMMSS(net)}`);
+            rows.push(`MAGGIORAZIONE (%);;${String(allowance).replace('.', ',')}%;`);
+            rows.push(`TOTALE STANDARD (CON MAGGIORAZIONE);;${num(gross)};${formatCminToHHMMSS(gross)}`);
+            rows.push('');
+            rows.push(`PEZZI/ORA (NETTO);;${formatPph(net)};`);
+            rows.push(`PEZZI/ORA (STANDARD);;${formatPph(gross)};`);
+
+            // BOM UTF-8 per far leggere correttamente gli accenti a Excel
+            const blob = new Blob(['\uFEFF' + rows.join('\r\n')], { type: 'text/csv;charset=utf-8;' });
+            const url = URL.createObjectURL(blob);
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = `Ciclo_Lavoro_Tempi_${new Date().toISOString().slice(0, 10)}.csv`;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            setTimeout(() => URL.revokeObjectURL(url), 1000);
+
+            showToast('File CSV scaricato');
+        }
+
+        // Dati demo iniziali
+        function loadSampleData() {
+            cyclePhases = [
+                { id: nextPhaseId++, name: 'Prelievo componenti e posizionamento', cmin: 45 },
+                { id: nextPhaseId++, name: 'Assemblaggio e serraggio viti', cmin: 120 },
+                { id: nextPhaseId++, name: 'Controllo qualità e collaudo visivo', cmin: 35 },
+                { id: nextPhaseId++, name: 'Imballo e stoccaggio', cmin: 50 }
+            ];
+            $('cmin-input').value = 150;
+            convertFromCmin();
+
+            renderPhasesTable();
+            calculateCycleTotals();
+        }
+
+        // Copia negli appunti
+        function legacyCopy(text, onDone) {
+            const tmp = document.createElement('textarea');
+            tmp.value = text;
+            tmp.setAttribute('readonly', '');
+            tmp.style.position = 'fixed';
+            tmp.style.opacity = '0';
+            document.body.appendChild(tmp);
+            tmp.select();
+            try { document.execCommand('copy'); } catch (e) { /* ignora */ }
+            document.body.removeChild(tmp);
+            onDone();
+        }
+
+        function copyToClipboard(elementId) {
+            const text = $(elementId).textContent;
+            const done = () => showToast(`Copiato: ${text}`);
+
+            if (navigator.clipboard && window.isSecureContext) {
+                navigator.clipboard.writeText(text).then(done).catch(() => legacyCopy(text, done));
+            } else {
+                legacyCopy(text, done);
+            }
+        }
+
+        // Toast di feedback (il timer precedente viene annullato)
+        function showToast(message) {
+            const toast = $('toast');
+            $('toast-message').textContent = message;
+
+            toast.classList.remove('translate-y-20', 'opacity-0');
+            toast.classList.add('translate-y-0', 'opacity-100');
+
+            clearTimeout(toastTimer);
+            toastTimer = setTimeout(() => {
+                toast.classList.remove('translate-y-0', 'opacity-100');
+                toast.classList.add('translate-y-20', 'opacity-0');
+            }, 2500);
+        }
+
+        // Sanitizzazione HTML
+        function escapeHtml(str) {
+            return str.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;");
+        }
+    </script>
+</body>
+</html>
